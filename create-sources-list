@@ -1,0 +1,46 @@
+#!/bin/bash
+
+# Check for the presence of the os-release file
+if [ -e /etc/os-release ]; then
+    # Import variables from the os-release file
+    . /etc/os-release
+
+    # Check for the presence of the UBUNTU_CODENAME variable
+    if [ -n "$UBUNTU_CODENAME" ]; then
+        ubuntu_codename=$UBUNTU_CODENAME
+    else
+        echo "Error: UBUNTU_CODENAME variable not found in the os-release file."
+        exit 1
+    fi
+else
+    echo "Error: The os-release file was not found."
+    exit 1
+fi
+
+# Path to the sources.list file
+sources_list="/etc/apt/sources.list"
+
+# Clear existing content of sources.list
+sudo echo "" | sudo tee $sources_list
+
+# Array of repositories
+repositories=(
+    "deb http://archive.ubuntu.com/ubuntu/ $ubuntu_codename main restricted universe multiverse"
+    "# deb-src http://archive.ubuntu.com/ubuntu/ $ubuntu_codename main restricted universe multiverse"
+    "deb http://archive.ubuntu.com/ubuntu/ $ubuntu_codename-updates main restricted universe multiverse"
+    "# deb-src http://archive.ubuntu.com/ubuntu/ $ubuntu_codename-updates main restricted universe multiverse"
+    "deb http://archive.ubuntu.com/ubuntu/ $ubuntu_codename-security main restricted universe multiverse"
+    "# deb-src http://archive.ubuntu.com/ubuntu/ $ubuntu_codename-security main restricted universe multiverse"
+    "deb http://archive.ubuntu.com/ubuntu/ $ubuntu_codename-backports main restricted universe multiverse"
+    "# deb-src http://archive.ubuntu.com/ubuntu/ $ubuntu_codename-backports main restricted universe multiverse"
+    "deb http://archive.canonical.com/ubuntu/ $ubuntu_codename partner"
+    "# deb-src http://archive.canonical.com/ubuntu/ $ubuntu_codename partner"
+)
+
+# Write repositories to the sources.list file
+for repo in "${repositories[@]}"; do
+    echo "$repo" | sudo tee -a $sources_list
+done
+
+echo "The $sources_list file has been successfully updated."
+
